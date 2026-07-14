@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: n8n
-      POSTGRES_PASSWORD: YOUR_POSTGRES_PASSWORD
+      POSTGRES_PASSWORD: U7hC4nQ9v2!kL8xR5pT1sZ6mW3dF0aQ
       POSTGRES_DB: n8n
     volumes:
       - postgres_data:/var/lib/postgresql/data
