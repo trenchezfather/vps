@@ -47,9 +47,11 @@ Instead of running many commands one by one, we've prepared a single script that
 First, download the script to your VPS:
 
 ```bash
-wget https://raw.githubusercontent.com/your_repo/your_script_name.sh -O setup_vps.sh
+wget https://raw.githubusercontent.com/trenchezfather/vps/main/setup_vps.sh -O setup_vps.sh
 ```
-
+```bash
+wget https://raw.githubusercontent.com/trenchezfather/vps/main/scripts/setup_vps.sh -O setup_vps.sh
+```
 **Note**: You will need to replace `https://raw.githubusercontent.com/your_repo/your_script_name.sh` with the actual URL where you host the `setup_vps.sh` script. For now, you can copy-paste the script content directly into a file on your VPS using `nano setup_vps.sh`.
 
 Before running, you need to make the script executable:
