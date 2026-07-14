@@ -69,9 +69,9 @@ nano setup_vps.sh
 Find the following lines near the top of the script and update them with your information:
 
 ```bash
-N8N_DOMAIN="your_n8n_domain.com" # Replace with your actual domain or VPS IP
-POSTGRES_PASSWORD="your_strong_postgres_password" # Replace with a strong password
-TIMEZONE="Europe/Berlin" # Replace with your desired timezone, e.g., America/New_York
+N8N_DOMAIN="n8n.fullztools.es" # Replace with your actual domain or VPS IP
+POSTGRES_PASSWORD="09066303384Ug@" # Replace with a strong password
+TIMEZONE="Africa/Lagos" # Replace with your desired timezone, e.g., America/New_York
 ```
 
 Press `Ctrl+X`, then `Y`, then Enter to save and exit `nano`.
@@ -90,7 +90,7 @@ The script will take some time to complete. Once it finishes, you will see a suc
 
 After logging back in, open your web browser on your computer and go to:
 
-`http://your_vps_ip:5678`
+`http://153.92.210.206:5678`
 
 (Replace `your_vps_ip` with your actual VPS IP address).
 
