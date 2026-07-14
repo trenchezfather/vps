@@ -1,0 +1,391 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 180]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "table": "session_context",
+        "conditions": [
+          {
+            "field": "sessionId",
+            "value": "={{ $json.sessionId }}"
+          }
+        ],
+        "options": {}
+      },
+      "name": "Session & Context Loader",
+      "type": "n8n-nodes-base.postgresql",
+      "typeVersion": 1,
+      "position": [480, 180]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "agentType": "chat",
+        "prompt": "You are a Planner Agent. Your goal is to break down complex user requests into a series of smaller, actionable steps. Consider the available tools and the overall objective. Output a JSON array of tasks.",
+        "options": {},
+        "chatModel": {
+          "model": "gpt-4o",
+          "credentialId": ""
+        }
+      },
+      "name": "Planner Agent (LLM)",
+      "type": "n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [720, 180]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "agentType": "chat",
+        "prompt": "You are a Reasoning Agent. Given the plan and current task, determine the best approach to execute the task. Focus on logical steps and potential challenges.",
+        "options": {},
+        "chatModel": {
+          "model": "gpt-4o",
+          "credentialId": ""
+        }
+      },
+      "name": "Reasoning Agent (LLM)",
+      "type": "n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [960, 180]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "agentType": "chat",
+        "prompt": "You are a Reviewer Agent. Evaluate the output of the Reasoning Agent and the proposed actions. Identify any flaws, inefficiencies, or potential errors before execution.",
+        "options": {},
+        "chatModel": {
+          "model": "gpt-4o",
+          "credentialId": ""
+        }
+      },
+      "name": "Reviewer Agent (LLM)",
+      "type": "n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [1200, 180]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items;",
+        "options": {}
+      },
+      "name": "Autonomous Task Manager",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1440, 180]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "task_queue",
+        "data": "={{ $json.task }}",
+        "options": {}
+      },
+      "name": "Task Queue",
+      "type": "n8n-nodes-base.postgresql",
+      "typeVersion": 1,
+      "position": [1680, 60]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items;",
+        "options": {}
+      },
+      "name": "Workflow Generator",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1680, 180]
+    },
+    {
+      "parameters": {
+        "interval": 60,
+        "unit": "seconds",
+        "options": {}
+      },
+      "name": "Scheduler",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [1680, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "agentType": "tools",
+        "prompt": "You are an Intelligent Tool Router. Based on the current task and available tools, select the most appropriate tool to execute the task. Output the tool name and its parameters.",
+        "options": {},
+        "chatModel": {
+          "model": "gpt-4o",
+          "credentialId": ""
+        },
+        "tools": [
+          {
+            "tool": "mcpClient",
+            "name": "Browser (Playwright)",
+            "parameters": {
+              "command": "browse",
+              "url": "={{ $json.url }}"
+            }
+          },
+          {
+            "tool": "executeCommand",
+            "name": "Shell (Bash)",
+            "parameters": {
+              "command": "={{ $json.command }}"
+            }
+          },
+          {
+            "tool": "httpRequest",
+            "name": "HTTP/API (REST)",
+            "parameters": {
+              "url": "={{ $json.url }}",
+              "method": "={{ $json.method }}"
+            }
+          },
+          {
+            "tool": "postgresql",
+            "name": "Database (PostgreSQL)",
+            "parameters": {
+              "operation": "query",
+              "query": "={{ $json.query }}"
+            }
+          },
+          {
+            "tool": "webSearch",
+            "name": "Search (Web)",
+            "parameters": {
+              "query": "={{ $json.query }}"
+            }
+          },
+          {
+            "tool": "fileOperations",
+            "name": "Files (Local)",
+            "parameters": {
+              "operation": "read",
+              "path": "={{ $json.path }}"
+            }
+          },
+          {
+            "tool": "visionOCR",
+            "name": "Vision (OCR)",
+            "parameters": {
+              "imageUrl": "={{ $json.imageUrl }}"
+            }
+          },
+          {
+            "tool": "executeWorkflow",
+            "name": "n8n Workflows",
+            "parameters": {
+              "workflowId": "={{ $json.workflowId }}"
+            }
+          }
+        ]
+      },
+      "name": "Intelligent Tool Router",
+      "type": "n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [1920, 180]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items;",
+        "options": {}
+      },
+      "name": "Execute Selected Tools",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2160, 180]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "agentType": "chat",
+        "prompt": "You are a Validator/Critic Agent. Evaluate the outcome of the executed tools against the original task and plan. Determine if the goal was achieved successfully or if a retry/re-plan is needed. Output \'success\' or \'failure\' and a reason.",
+        "options": {},
+        "chatModel": {
+          "model": "gpt-4o",
+          "credentialId": ""
+        }
+      },
+      "name": "Validator / Critic Agent",
+      "type": "n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [2400, 180]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": "session_context",
+        "data": "={{ $json.memoryUpdate }}",
+        "options": {}
+      },
+      "name": "Save to Memory",
+      "type": "n8n-nodes-base.postgresql",
+      "typeVersion": 1,
+      "position": [2880, 120]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items;",
+        "options": {}
+      },
+      "name": "Retry / Re-plan",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2880, 240]
+    },
+    {
+      "parameters": {
+        "conditions": [
+          {
+            "value1": "={{ $json.status }}",
+            "value2": "success"
+          }
+        ]
+      },
+      "name": "Goal Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2640, 180]
+    },
+    {
+      "parameters": {
+        "message": "Goal achieved: {{ $json.reason }}",
+        "options": {}
+      },
+      "name": "Telegram / WhatsApp Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [3120, 120]
+    }
+  ],
+  "connections": {
+    "Webhook": [
+      {
+        "node": "Session & Context Loader",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Session & Context Loader": [
+      {
+        "node": "Planner Agent (LLM)",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Planner Agent (LLM)": [
+      {
+        "node": "Reasoning Agent (LLM)",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Reasoning Agent (LLM)": [
+      {
+        "node": "Reviewer Agent (LLM)",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Reviewer Agent (LLM)": [
+      {
+        "node": "Autonomous Task Manager",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Autonomous Task Manager": [
+      {
+        "node": "Task Queue",
+        "type": "main",
+        "index": 0
+      },
+      {
+        "node": "Workflow Generator",
+        "type": "main",
+        "index": 0
+      },
+      {
+        "node": "Scheduler",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Task Queue": [
+      {
+        "node": "Intelligent Tool Router",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Workflow Generator": [
+      {
+        "node": "Intelligent Tool Router",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Scheduler": [
+      {
+        "node": "Intelligent Tool Router",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Intelligent Tool Router": [
+      {
+        "node": "Execute Selected Tools",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Execute Selected Tools": [
+      {
+        "node": "Validator / Critic Agent",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Validator / Critic Agent": [
+      {
+        "node": "Goal Complete?",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Goal Complete?": [
+      {
+        "node": "Save to Memory",
+        "type": "main",
+        "index": 0
+      },
+      {
+        "node": "Retry / Re-plan",
+        "type": "main",
+        "index": 1
+      }
+    ],
+    "Save to Memory": [
+      {
+        "node": "Telegram / WhatsApp Reply",
+        "type": "main",
+        "index": 0
+      }
+    ],
+    "Retry / Re-plan": [
+      {
+        "node": "Planner Agent (LLM)",
+        "type": "main",
+        "index": 0
+      }
+    ]
+  }
+}
